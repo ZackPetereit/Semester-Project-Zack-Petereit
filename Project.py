@@ -9,13 +9,66 @@ Original file is located at
 
 import requests
 import json
-
 import datetime
+import pandas as pd
+import streamlit as st
 
+# Get the current year
+current_year = datetime.datetime.now().year
 
+# Define headers and request data
 headers = {'Content-type': 'application/json'}
-current_year = datetime.datetime.now().year #get current year
+data = json.dumps({
+    "seriesid": ['LNS14000000', 'CES0000000001', 'CES0500000002', 'CES0500000003', 'EIUIR', 'EIUIQ'],
+    "startyear": "2022",
+    "endyear": str(current_year)
+})
 
-#retreieve data between 2023 and current year
-data = json.dumps({"seriesid": ['LNS14000000','CES0000000001', 'CES0500000002', 'CES0500000003', 'PRS85006092'],"startyear":"2023", "endyear":str(current_year)})
-p = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)
+# Make the request to the BLS API
+response = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)
+json_data = json.loads(response.text)
+
+# Define mapping of series IDs to descriptive names
+series_names = {
+    'LNS14000000': 'Unemployment Rate',
+    'CES0000000001': 'Total Non-Farm Employees',
+    'CES0500000002': 'Average Weekly Hours',
+    'CES0500000003': 'Average Hourly Earnings',
+    'EIUIR': 'Import Prices',
+    'EIUIQ': 'Export Prices'
+}
+
+# Process the data
+def process_bls_data(json_data, series_names):
+    all_data = []
+    for series in json_data['Results']['series']:
+        series_id = series['seriesID']
+        for item in series['data']:
+            year = item['year']
+            period = item['period']
+            value = item['value']
+            footnotes = ",".join([footnote['text'] for footnote in item['footnotes'] if footnote])
+            if 'M01' <= period <= 'M12':
+                all_data.append([series_names.get(series_id, series_id), year, period, value, footnotes])
+    df = pd.DataFrame(all_data, columns=["series_name", "year", "period", "value", "footnotes"])
+    df['date'] = pd.to_datetime(df['year'] + df['period'].str[1:], format='%Y%m')
+    df['value'] = pd.to_numeric(df['value'])
+    return df
+
+# Convert JSON data to DataFrame
+df = process_bls_data(json_data, series_names)
+
+# Streamlit dashboard
+st.title('BLS Data Dashboard')
+st.subheader('Data from 2023 to Current Year')
+
+# Display the data
+st.write(df)
+
+# Plot the data for each series
+for series_name in df['series_name'].unique():
+    series_data = df[df['series_name'] == series_name]
+    st.subheader(series_name)
+    st.line_chart(series_data.set_index('date')['value'])
+
+# To run this app, save the script as `app.py` and run `streamlit run app.py` in your terminal

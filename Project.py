@@ -9,7 +9,7 @@ Original file is located at
 
 import requests
 import json
-import prettytable
+
 import datetime
 
 
@@ -19,20 +19,3 @@ current_year = datetime.datetime.now().year #get current year
 #retreieve data between 2023 and current year
 data = json.dumps({"seriesid": ['LNS14000000','CES0000000001', 'CES0500000002', 'CES0500000003', 'PRS85006092'],"startyear":"2023", "endyear":str(current_year)})
 p = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)
-json_data = json.loads(p.text)
-for series in json_data['Results']['series']:
-    x=prettytable.PrettyTable(["series id","year","period","value","footnotes"])
-    seriesId = series['seriesID']
-    for item in series['data']:
-        year = item['year']
-        period = item['period']
-        value = item['value']
-        footnotes=""
-        for footnote in item['footnotes']:
-            if footnote:
-                footnotes = footnotes + footnote['text'] + ','
-        if 'M01' <= period <= 'M12':
-            x.add_row([seriesId,year,period,value,footnotes[0:-1]])
-    output = open(seriesId + '.txt','w')
-    output.write (x.get_string())
-    output.close()

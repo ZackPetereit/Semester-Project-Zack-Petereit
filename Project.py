@@ -83,5 +83,3 @@ for series_name in combined_df['series_name'].unique():
     series_data = combined_df[combined_df['series_name'] == series_name]
     st.subheader(series_name)
     st.line_chart(series_data.set_index('date')['value'])
-
-# To run this app, save the script as `app.py` and run `streamlit run app.py` in your terminal

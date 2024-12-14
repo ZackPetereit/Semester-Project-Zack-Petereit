@@ -13,14 +13,16 @@ import datetime
 import pandas as pd
 import streamlit as st
 
-# Get the current year
+
+# Get the current year and month
 current_year = datetime.datetime.now().year
+current_month = datetime.datetime.now().month
 
 # Define headers and request data
 headers = {'Content-type': 'application/json'}
 data = json.dumps({
     "seriesid": ['LNS14000000', 'CES0000000001', 'CES0500000002', 'CES0500000003', 'EIUIR', 'EIUIQ'],
-    "startyear": "2022",
+    "startyear": str(current_year),
     "endyear": str(current_year)
 })
 
@@ -56,18 +58,29 @@ def process_bls_data(json_data, series_names):
     return df
 
 # Convert JSON data to DataFrame
-df = process_bls_data(json_data, series_names)
+new_data_df = process_bls_data(json_data, series_names)
+
+# Load existing data if available
+try:
+    existing_data_df = pd.read_csv('bls_data.csv', parse_dates=['date'])
+    # Append new data
+    combined_df = pd.concat([existing_data_df, new_data_df]).drop_duplicates().reset_index(drop=True)
+except FileNotFoundError:
+    combined_df = new_data_df
+
+# Save the updated dataset
+combined_df.to_csv('bls_data.csv', index=False)
 
 # Streamlit dashboard
 st.title('BLS Data Dashboard')
-st.subheader('Data from 2023 to Current Year')
+st.subheader('Data from 2023 to Current Date')
 
 # Display the data
-st.write(df)
+st.write(combined_df)
 
 # Plot the data for each series
-for series_name in df['series_name'].unique():
-    series_data = df[df['series_name'] == series_name]
+for series_name in combined_df['series_name'].unique():
+    series_data = combined_df[combined_df['series_name'] == series_name]
     st.subheader(series_name)
     st.line_chart(series_data.set_index('date')['value'])
 

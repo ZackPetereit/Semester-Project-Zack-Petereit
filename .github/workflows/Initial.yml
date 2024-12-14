@@ -8,5 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    steps:
+
       - name: Run script
         run: python Project.py
+

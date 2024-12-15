@@ -12,6 +12,7 @@ This code reads the U.S. Bureau of Labor Statistics (BLS) for Unemployment Rate,
 Average weekly earnings, Import prices, and Export Prices. The code generates a csv file that is can be updated as new data is released by the BLS.
 The code also prepares for Steamlit integration to generate a dashboard. 
 """
+python3 -m pip install setuptools
 
 import requests
 import json

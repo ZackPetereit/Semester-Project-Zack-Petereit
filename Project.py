@@ -23,7 +23,7 @@ import setuptools
 
 # Get the current year and month
 current_year = datetime.datetime.now().year
-current_month = datetime.datetime.now().month
+current_month = datetime.datetime.now().strftime('%B')
 
 # Define headers and request data
 headers = {'Content-type': 'application/json'}

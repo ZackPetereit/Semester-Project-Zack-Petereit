@@ -3,3 +3,4 @@ numpy==1.25.1
 scipy==1.9.3
 pandas==2.0.3
 streamlit==1.41.0
+setuptools==75.6.0
